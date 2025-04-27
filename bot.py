@@ -1,10 +1,9 @@
 from webdriver import WebDriver
-from selenium.common.exceptions import NoSuchElementException
-from twilio.rest import Client
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 import smtplib
 import time
 import random
-
+import logging
 
 class Bot:
     def __init__(self, start_page_url):
@@ -35,6 +34,7 @@ class Bot:
 
     def select_item_by_x_path(self, item_x_path):
         item = self.webdriver.find_element_by_x_path(item_x_path)
+        #print(item)
         return self.webdriver.click_on_element(item)
 
     def go_to_ticket_page(self, otherCategory, ticketName):
@@ -47,25 +47,64 @@ class Bot:
 
     def find_available(self):
         try:
-            self.webdriver.driver.find_element_by_xpath('//*[text()="Er worden op dit moment geen tickets aangeboden."]')
-        except NoSuchElementException:
+            self.webdriver.find_element_by_x_path('//*[text()="Jelenleg nincs elérhető jegy"]')
+        except (NoSuchElementException, TimeoutException):
+            '''try:
+                if self.webdriver.find_element_by_x_path('//*[text()="Valami hiba történt... kérjük, lépj velünk kapcsolatba, ha a hiba továbbra is fennáll."]'):
+                    logging.error("Page error, sleep 300")
+                    time.sleep(300)
+                    return False
+            except:
+                return True'''
             return True
         return False
 
+    def jump_to_ticket_page(self):
+        self.go_to_start_page()
+        time.sleep(0.3)
+        self.select_item_by_x_path("/html/body/div[1]/div[2]/div[3]/div[1]/a[1]")
+        time.sleep(0.3)
+        self.go_to_ticket_page(otherCategory="", ticketName="Állójegy")
+       # self.refresh()
+
     def refresher(self):
-        random_decimal = random.randint(40000, 80000) / 10000
+        random_decimal = random.randint(50000, 150000) / 10000
         time.sleep(random_decimal)
-        self.refresh()
+        self.jump_to_ticket_page()
+        try:
+            self.webdriver.find_element_by_x_path('//*[text()="Minden jegy"]')
+            return True
+        except (NoSuchElementException, TimeoutException):
+            return False
+
 
     def reserve_ticket(self):
-        self.select_item_by_x_path("/html/body/div[1]/div[2]/div[3]/a[1]")
+        self.select_item_by_x_path("/html/body/div[1]/div[2]/div[4]/div[2]/div[1]/a[1]")
         time.sleep(0.355)
-        self.select_item_by_x_path('//*[text()="Koop ticket"]')
+        self.select_item_by_x_path('//*[text()="Kosárba"]')
 
-    def dial_number(self, twilioNumber, number, sid, token):
-        TWIML_INSTRUCTIONS_URL = \
-            "https://static.fullstackpython.com/phone-calls-python.xml"
-        client = Client(sid, token)
+    def login(self):
+        input("Hit Enter when logged in")
+'''
+        self.select_item("Bejelentkezés")
+        time.sleep(1)
 
-        client.calls.create(to=number, from_=twilioNumber,
-                            url=TWIML_INSTRUCTIONS_URL, method="GET")
+
+        # provide input string to the previously selected field:
+        self.webdriver.fill_in_input_field('//*[id()="email"]', "kolozsvari.dl@gmail.com")
+
+        self.select_item("Folytatás e-mailen keresztül")
+
+        # read input string from console:
+        code = input("Email code: ")
+
+        self.webdriver.fill_in_input_field('//*[id()="one-time-code-input-1"]', code[0])
+        self.webdriver.fill_in_input_field('//*[id()="one-time-code-input-2"]', code[1])
+        self.webdriver.fill_in_input_field('//*[id()="one-time-code-input-3"]', code[2])
+        self.webdriver.fill_in_input_field('//*[id()="one-time-code-input-4"]', code[3])
+        self.webdriver.fill_in_input_field('//*[id()="one-time-code-input-5"]', code[4])
+        self.webdriver.fill_in_input_field('//*[id()="one-time-code-input-6"]', code[5])
+
+        self.select_item("Beküldés")
+'''
+

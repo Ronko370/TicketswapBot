@@ -13,6 +13,7 @@ class WebDriver:
     def __init__(self):
         self.driver = webdriver.Chrome(
             executable_path=get_chromedriver_path(), options=self.get_options())
+        self.driver.implicitly_wait("10")
 
     def get_current_url(self):
         return self.driver.current_url
@@ -31,6 +32,7 @@ class WebDriver:
         except TimeoutException:
             logging.warning(
                 "Element isn't located yet: {}".format(element_x_path))
+            raise
 
     def find_element_by_visible_text(self, element_text):
         case_insensitive_element_x_path = "//*[text()[contains(translate(., '{}', '{}'), '{}')]]" \
@@ -63,7 +65,10 @@ class WebDriver:
         options = webdriver.ChromeOptions()
         options.add_argument("lang=nl-BE")
         options.add_argument("start-maximized");
+        options.add_experimental_option("debuggerAddress", "localhost:9042")  # Connect to running Chrome
         return options
+    
+    
 
 
 def get_chromedriver_path():
